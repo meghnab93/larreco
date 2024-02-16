@@ -256,7 +256,11 @@ namespace hit {
       recob::Hit hit_tbb;
       art::Ptr<recob::Wire> wire_tbb;
     };
-
+	
+    // Use thread-safe containers to store histogram values                                                                                                                                                 
+    tbb::concurrent_vector<double> chi2PerNDFValues;
+    tbb::concurrent_vector<double> chi2PerNDFValuesFinal;
+	  
     tbb::concurrent_vector<hitstruct> hitstruct_vec;
     tbb::concurrent_vector<hitstruct> filthitstruct_vec;
 
@@ -388,8 +392,9 @@ namespace hit {
                   chi2PerNDF = 2. * fChi2NDF;
                   NDF = 2;
                 }
-
-                if (fFillHists) fFirstChi2->Fill(chi2PerNDF);
+		//Reduction
+		chi2PerNDFValues.push_back(chi2PerNDF);		
+                //if (fFillHists) fFirstChi2->Fill(chi2PerNDF);
               }
 
               // #######################################################
@@ -591,8 +596,9 @@ namespace hit {
                   filthitstruct_vec.push_back(std::move(tmp));
                 }
               }
-
-              if (fFillHists) fChi2->Fill(chi2PerNDF);
+	      //Reduction
+	      chi2PerNDFValuesFinal.push_back(chi2PerNDF);
+              //if (fFillHists) fChi2->Fill(chi2PerNDF);
             } //<---End loop over merged candidate hits
           }   //<---End looping over ROI's
         );    //end tbb parallel for
@@ -618,6 +624,16 @@ namespace hit {
       allHitCol.emplace_back(hitstruct_vec[i].hit_tbb, hitstruct_vec[i].wire_tbb);
     }
     allHitCol.put_into(evt);
+    //Reduction 
+    if (fFillHists) {
+      for (const auto& value : chi2PerNDFValues) {
+        fFirstChi2->Fill(value);
+      }
+      for (const auto& value : chi2PerNDFValuesFinal) {
+        fChi2->Fill(value);
+      }
+    }
+
 
   } // End of produce()
 
