@@ -255,6 +255,7 @@ namespace hit {
     struct hitstruct {
       recob::Hit hit_tbb;
       art::Ptr<recob::Wire> wire_tbb;
+      bool keep;
     };
 	
     // Use thread-safe containers to store histogram values                                                                                                                                                 
@@ -515,16 +516,19 @@ namespace hit {
                   NDF                         // dof
                 );
 
-                if (fFilterHits) filteredHitVec.push_back(hitcreator.copy());
+                Hits.push_back(hitcreator.move());
 
-                // This loop will store ALL hits
-                hitstruct_vec.emplace_back(hitcreator.move(), wire);
-
+                
                 numHits++;
-              } // <---End loop over gaussians
+              } // <---End loop over gaussians  // change the for loop into a function returning a vector // func. returns filteredHitVec, immediately emplace back to hitstrct vec 
+		// This loop will store ALL hits
+                for (const auto &hit:Hits){
+		 hitstruct_vec.emplace_back(hit, wire);	
+		}
+		 
 
               // Should we filter hits?
-              if (!fFilterHits || filteredHitVec.empty()) {
+              if (!fFilterHits || Hits.empty()) {
                 continue;
               }
 
