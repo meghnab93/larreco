@@ -461,8 +461,8 @@ namespace hit {
               int numHits(0);
 
               // Make a container for what will be the filtered collection
-              std::vector<recob::Hit> filteredHitVec;
-
+              //std::vector<recob::Hit> filteredHitVec;
+              std::vector<recob::Hit> Hits;
               for (const auto& peakParams : peakParamsVec) {
                 // Extract values for this hit
                 float peakAmp = peakParams.peakAmplitude;
@@ -516,16 +516,21 @@ namespace hit {
                   NDF                         // dof
                 );
 
-                Hits.push_back(hitcreator.move());
-
+                //Hits.push_back(hitcreator.move()); // Kyle
+		      
+		// Filter logic: Placeholder conditions for keeping a hit
+        	//bool keep = peakAmp > fPulseHeightCuts && peakWidth > fPulseWidthCuts;
+        
+		Hits.emplace_back(hitcreator.move(), wire, false);
                 
                 numHits++;
               } // <---End loop over gaussians  // change the for loop into a function returning a vector // func. returns filteredHitVec, immediately emplace back to hitstrct vec 
 		// This loop will store ALL hits
+		/*
                 for (const auto &hit:Hits){
 		 hitstruct_vec.emplace_back(hit, wire);	
 		}
-		 
+		*/ // Kyle 
 
               // Should we filter hits?
               if (!fFilterHits || Hits.empty()) {
@@ -540,24 +545,32 @@ namespace hit {
               // #######################################################################
 
               // Sort in ascending peak height
-              std::sort(filteredHitVec.begin(),
-                        filteredHitVec.end(),
+              std::sort(Hits.begin(),
+                        Hits.end(),
                         [](const auto& left, const auto& right) {
                           return left.PeakAmplitude() > right.PeakAmplitude();
                         });
 
               // Reject if the first hit fails the PH/wid cuts
-              if (filteredHitVec.front().PeakAmplitude() < fPulseHeightCuts.at(plane) ||
-                  filteredHitVec.front().RMS() < fPulseWidthCuts.at(plane))
-                filteredHitVec.clear();
+              if (Hits.front().PeakAmplitude() < fPulseHeightCuts.at(plane) ||
+                  Hits.front().RMS() < fPulseWidthCuts.at(plane))
+		for (auto& hit : Hits) hit.keep = false; 
+                //filteredHitVec.clear();
 
               // Now check other hits in the snippet
-              if (filteredHitVec.size() > 1) {
+              if (Hits.size() > 1) {
                 // The largest pulse height will now be at the front...
-                float largestPH = filteredHitVec.front().PeakAmplitude();
+                float largestPH = Hits.front().PeakAmplitude();
 
                 // Find where the pulse heights drop below threshold
                 float threshold(fPulseRatioCuts.at(plane));
+
+		for (auto& hit : Hits) {
+            	    if (hit.PeakAmplitude() < 8. && hit.PeakAmplitude() / largestPH < threshold) {
+                	hit.keep = false; // This hit does not meet the criteria, mark as not kept
+            		}
+        	}
+		 /*     
 		// Use std::partition to move hits not meeting the criteria to the end of the vector                                                                                                      
 		auto partitionPoint = std::partition(filteredHitVec.begin(), filteredHitVec.end(),
 						     [largestPH, threshold](const auto& hit) {
@@ -570,7 +583,7 @@ namespace hit {
 		std::sort(filteredHitVec.begin(), filteredHitVec.end(),
 			  [](const auto& left, const auto& right) {
 			    return left.PeakTime() < right.PeakTime();
-			  });
+			  });*/
 		/*
                 std::vector<recob::Hit>::iterator smallHitItr =
                   std::find_if(filteredHitVec.begin(),
@@ -593,13 +606,22 @@ namespace hit {
               }
 
               // Copy the hits we want to keep to the filtered hit collection
-              for (const auto& filteredHit : filteredHitVec) {
+	      for (const auto& filteredHit : Hits) {
+		if(filteredHit.keep) {
+		  if (fHitFilterAlg->IsGoodHit(filteredHit)) {
+                    hitstruct tmp{std::move(filteredHit), wire};
+                    filthitstruct_vec.push_back(std::move(tmp));
+                  } 	
+		} 
+	      }
+              /*
+	      for (const auto& filteredHit : filteredHitVec) {
                 assert(fHitFilterAlg);
                 if (fHitFilterAlg->IsGoodHit(filteredHit)) {
                   hitstruct tmp{std::move(filteredHit), wire};
                   filthitstruct_vec.push_back(std::move(tmp));
                 }
-              }
+              }*/ 
 	      //Reduction
 	      chi2PerNDFValuesFinal.push_back(chi2PerNDF);
               //if (fFillHists) fChi2->Fill(chi2PerNDF);
