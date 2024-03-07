@@ -71,7 +71,7 @@ namespace hit {
     std::function<double(double, double, double, double, int, int)> getCharge;
 
     const bool fFilterHits;
-    const bool fFillHists;
+    //const bool fFillHists;
 
     const std::string fCalDataModuleLabel;
     const std::string fAllHitsInstanceName;
