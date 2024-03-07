@@ -544,16 +544,21 @@ namespace hit {
     // and its associations to wires and raw digits
     if (fFilterHits) {
       recob::HitCollectionCreator filteredHitCol(evt, "", true, false);
-      for (size_t j = 0; j < filthitstruct_vec.size(); j++) {
-        filteredHitCol.emplace_back(filthitstruct_vec[j].hit_tbb, filthitstruct_vec[j].wire_tbb);
+
+      // Iterate over hitstruct_vec and only emplace_back if keep == true                                                                                                                                   
+      for (size_t j = 0; j < hitstruct_vec.size(); j++) {
+        if (hitstruct_vec[j].keep) { // Check if the hit should be kept                                                                                                                                     
+          filteredHitCol.emplace_back(hitstruct_vec[j].hit_tbb, hitstruct_vec[j].wire_tbb);
+        }
       }
+
       filteredHitCol.put_into(evt);
-      
+
       if (fAllHitsInstanceName.empty()) {
         return;
       }
     }
-    
+
     recob::HitCollectionCreator allHitCol(evt, fAllHitsInstanceName, true, false);
     for (size_t i = 0; i < hitstruct_vec.size(); i++) {
       allHitCol.emplace_back(hitstruct_vec[i].hit_tbb, hitstruct_vec[i].wire_tbb);
