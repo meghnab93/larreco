@@ -100,8 +100,8 @@ namespace hit {
     std::unique_ptr<HitFilterAlg> fHitFilterAlg; ///< algorithm used to filter out noise hits
 
     //only used when fFillHists is true and in single threaded mode.
-    TH1F* fFirstChi2;
-    TH1F* fChi2;
+    //TH1F* fFirstChi2;
+    //TH1F* fChi2;
 
   }; // class GausHitFinder
 
@@ -213,14 +213,15 @@ namespace hit {
   void GausHitFinder::beginJob(art::ProcessingFrame const&)
   {
     // get access to the TFile service
-    art::ServiceHandle<art::TFileService const> tfs;
+    //art::ServiceHandle<art::TFileService const> tfs;
 
     // ======================================
     // === Hit Information for Histograms ===
-    if (fFillHists) {
+   /* 
+   if (fFillHists) {
       fFirstChi2 = tfs->make<TH1F>("fFirstChi2", "#chi^{2}", 10000, 0, 5000);
       fChi2 = tfs->make<TH1F>("fChi2", "#chi^{2}", 10000, 0, 5000);
-    }
+    } */
   }
 
   //  This algorithm uses the fact that deconvolved signals are very smooth
@@ -254,8 +255,8 @@ namespace hit {
       bool keep;
     };
     // Use thread-safe containers to store histogram values                                                                                                                                                
-    tbb::concurrent_vector<double> chi2PerNDFValues;
-    tbb::concurrent_vector<double> chi2PerNDFValuesFinal;
+    //tbb::concurrent_vector<double> chi2PerNDFValues;
+    //tbb::concurrent_vector<double> chi2PerNDFValuesFinal;
     
     // Use thread-safe containers to store hits 
     tbb::concurrent_vector<hitstruct> hitstruct_vec;
@@ -367,7 +368,7 @@ namespace hit {
                   chi2PerNDF = 2. * fChi2NDF;
                   NDF = 2;
                 }
-		chi2PerNDFValues.push_back(chi2PerNDF);
+		//chi2PerNDFValues.push_back(chi2PerNDF);
                 //if (fFillHists) fFirstChi2->Fill(chi2PerNDF);
               }
 	      
@@ -533,7 +534,7 @@ namespace hit {
         	}
 	      }            
 	      hitstruct_vec.grow_by(Hits.begin(), Hits.end());
-	      chi2PerNDFValuesFinal.push_back(chi2PerNDF);
+	      //chi2PerNDFValuesFinal.push_back(chi2PerNDF);
             } //<---End loop over merged candidate hits
           }   //<---End looping over ROI's
 			  );    //end tbb parallel for
