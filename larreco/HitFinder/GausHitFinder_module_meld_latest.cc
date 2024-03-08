@@ -278,7 +278,7 @@ namespace hit {
     tbb::parallel_for(
       static_cast<std::size_t>(0),
       wireVecHandle->size(),
-      [&](size_t& wireIter) {
+      [&](size_t& wireIter) { // instead of lambda call a function // maybe a lambda but inside call a function // put 
         // ####################################
         // ### Getting this particular wire ###
         // ####################################
@@ -516,9 +516,10 @@ namespace hit {
 	      // Reject if the first hit fails the PH/wid cuts
 	      
 	      if (Hits.front().hit_tbb.PeakAmplitude() < fPulseHeightCuts.at(plane) ||
-                  Hits.front().hit_tbb.RMS() < fPulseWidthCuts.at(plane))
+                  Hits.front().hit_tbb.RMS() < fPulseWidthCuts.at(plane)) {
+		hitstruct_vec.grow_by(Hits.begin(), Hits.end());
 		continue; // bool outside = peakAmp > fPulseHeightCuts && peakWidth > fPulseWidthCuts;
-	      
+	      }
 	      // Now check other hits in the snippet
               if (Hits.size() > 1) {
                 // The largest pulse height will now be at the front...
@@ -538,8 +539,8 @@ namespace hit {
             } //<---End loop over merged candidate hits
           }   //<---End looping over ROI's
 			  );    //end tbb parallel for
-      }       //<---End looping over all the wires
-		      );        //end tbb parallel for
+      }       //<---End looping over all the wires // end of lambda
+		      );        //end tbb parallel for // end looping over wires
     
     // this contains the hit collection
     // and its associations to wires and raw digits
